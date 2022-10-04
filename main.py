@@ -3,19 +3,42 @@ from datetime import date
 from tkinter import Tk     # from tkinter import Tk for Python 3.x
 from tkinter.filedialog import askopenfilename
 import pandas as pd
+from time import sleep
+import pprint
+pp = pprint.PrettyPrinter()
+
+from threading import current_thread
+
+import pywinusb.hid as hid
+
+scannerVID = 0x1fca
+scannerPID = 0x5aa8
+
+class CardReadException(Exception):
+    pass
+
+class ScannerNotFound(Exception):
+    pass
+
 
 idPrefixes = {
-    "DAA":"Full Name",    "DAB":"Family Name",    "DAC":"Given Name",    "DAD":"Middle Name",    "DAE":"Name Suffix",    "DAF":"Name Prefix",    "DAG":"Mailing Street Address1",    "DAH":"Mailing Street Address2",    "DAI":"Mailing City",    "DAJ":"Mailing Jurisdiction Code",    "DAK":"Mailing Postal Code",    "DAL":"Residence Street Address1",    "DAM":"Residence Street Address2",    "DAN":"Residence City",    "DAO":"Residence Jurisdiction Code",    "DAP":"Residence Postal Code",    "DAQ":"License or ID Number",    "DAR":"License Classification Code",    "DAS":"License Restriction Code",    "DAT":"License Endorsements Code",    "DAU":"Height in FT_IN",    "DAV":"Height in CM",    "DAW":"Weight in LBS",    "DAX":"Weight in KG",    "DAY":"Eye Color",    "DAZ":"Hair Color",    "DBA":"License Expiration Date",    "DBB":"Date of Birth",    "DBC":"Sex",    "DBD":"License or ID Document Issue Date",    "DBE":"Issue Timestamp",    "DBF":"Number of Duplicates",    "DBG":"Medical Indicator Codes",    "DBH":"Organ Donor",    "DBI":"Non-Resident Indicator",    "DBJ":"Unique Customer Identifier",    "DBK":"Social Security Number",    "DBL":"Date Of Birth",    "DBM":"Social Security Number",    "DBN":"Full Name",    "DBO":"Family Name",    "DBP":"Given Name",    "DBQ":"Middle Name or Initial",    "DBR":"Suffix",    "DBS":"Prefix",    "DCA":"Virginia Specific Class",    "DCB":"Virginia Specific Restrictions",    "DCD":"Virginia Specific Endorsements",    "DCE":"Physical Description Weight Range",    "DCF":"Document Discriminator",    "DCG":"Country territory of issuance",    "DCH":"Federal Commercial Vehicle Codes",    "DCI":"Place of birth",    "DCJ":"Audit information",    "DCK":"Inventory Control Number",    "DCL":"Race Ethnicity",    "DCM":"Standard vehicle classification",    "DCN":"Standard endorsement code",    "DCO":"Standard restriction code",    "DCP":"Jurisdiction specific vehicle classification description",    "DCQ":"Jurisdiction-specific",    "DCR":"Jurisdiction specific restriction code description",    "DCS":"Last Name",    "DCT":"First Name",    "DCU":"Suffix",    "DDA":"Compliance Type",    "DDB":"Card Revision Date",    "DDC":"HazMat Endorsement Expiry Date",    "DDD":"Limited Duration Document Indicator",    "DDE":"Family Name Truncation",    "DDF":"First Names Truncation",    "DDG":"Middle Names Truncation",    "DDH":"Under 18 Until",    "DDI":"Under 19 Until",    "DDJ":"Under 21 Until",    "DDK":"Organ Donor Indicator",    "DDL":"Veteran Indicator",    "PAA":"Permit Classification Code",    "PAB":"Permit Expiration Date",    "PAC":"Permit Identifier",    "PAD":"Permit IssueDate",    "PAE":"Permit Restriction Code",    "PAF":"Permit Endorsement Code",    "ZVA":"Court Restriction Code"}
+    # "DAA":"Full Name",    "DAB":"Family Name",    "DAC":"Given Name",    "DAD":"Middle Name",    "DAE":"Name Suffix",    "DAF":"Name Prefix",    "DAG":"Mailing Street Address1",    "DAH":"Mailing Street Address2",    "DAI":"Mailing City",    "DAJ":"Mailing Jurisdiction Code",    "DAK":"Mailing Postal Code",    "DAL":"Residence Street Address1",    "DAM":"Residence Street Address2",    "DAN":"Residence City",    "DAO":"Residence Jurisdiction Code",    "DAP":"Residence Postal Code",    "DAQ":"License or ID Number",    "DAR":"License Classification Code",    "DAS":"License Restriction Code",    "DAT":"License Endorsements Code",    "DAU":"Height in FT_IN",    "DAV":"Height in CM",    "DAW":"Weight in LBS",    "DAX":"Weight in KG",    "DAY":"Eye Color",    "DAZ":"Hair Color",    "DBA":"License Expiration Date",    "DBB":"Date of Birth",    "DBC":"Sex",    "DBD":"License or ID Document Issue Date",    "DBE":"Issue Timestamp",    "DBF":"Number of Duplicates",    "DBG":"Medical Indicator Codes",    "DBH":"Organ Donor",    "DBI":"Non-Resident Indicator",    "DBJ":"Unique Customer Identifier",    "DBK":"Social Security Number",    "DBL":"Date Of Birth",    "DBM":"Social Security Number",    "DBN":"Full Name",    "DBO":"Family Name",    "DBP":"Given Name",    "DBQ":"Middle Name or Initial",    "DBR":"Suffix",    "DBS":"Prefix",    "DCA":"Virginia Specific Class",    "DCB":"Virginia Specific Restrictions",    "DCD":"Virginia Specific Endorsements",    "DCE":"Physical Description Weight Range",    "DCF":"Document Discriminator",    "DCG":"Country territory of issuance",    "DCH":"Federal Commercial Vehicle Codes",    "DCI":"Place of birth",    "DCJ":"Audit information",    "DCK":"Inventory Control Number",    "DCL":"Race Ethnicity",    "DCM":"Standard vehicle classification",    "DCN":"Standard endorsement code",    "DCO":"Standard restriction code",    "DCP":"Jurisdiction specific vehicle classification description",    "DCQ":"Jurisdiction-specific",    "DCR":"Jurisdiction specific restriction code description",    "DCS":"Last Name",    "DCT":"Given Name",    "DCU":"Suffix",   "DDB":"Card Revision Date",    "DDC":"HazMat Endorsement Expiry Date",  "DDE":"Family Name Truncation",    "DDF":"First Names Truncation",    "DDG":"Middle Names Truncation",    "DDH":"Under 18 Until",    "DDI":"Under 19 Until",    "DDJ":"Under 21 Until",    "DDK":"Organ Donor Indicator",    "DDL":"Veteran Indicator",    "PAA":"Permit Classification Code",    "PAB":"Permit Expiration Date",    "PAC":"Permit Identifier",    "PAD":"Permit IssueDate",    "PAE":"Permit Restriction Code",    "PAF":"Permit Endorsement Code",    "ZVA":"Court Restriction Code"}
+    "DAA":"Full Name",    "DAB":"Family Name",    "DAC":"Given Name",    "DAD":"Middle Name",    "DAE":"Name Suffix",    "DAF":"Name Prefix",    "DAG":"Mailing Street Address1",    "DAH":"Mailing Street Address2",    "DAI":"Mailing City",    "DAJ":"Mailing Jurisdiction Code",    "DAK":"Mailing Postal Code",    "DAL":"Residence Street Address1",    "DAM":"Residence Street Address2",    "DAN":"Residence City",    "DAO":"Residence Jurisdiction Code",    "DAP":"Residence Postal Code",    "DAQ":"License or ID Number",    "DAR":"License Classification Code",    "DAS":"License Restriction Code",    "DAT":"License Endorsements Code",    "DAU":"Height in FT_IN",    "DAV":"Height in CM",    "DAW":"Weight in LBS",    "DAX":"Weight in KG",    "DAY":"Eye Color",    "DAZ":"Hair Color",    "DBA":"License Expiration Date",    "DBB":"Date of Birth",    "DBC":"Sex",    "DBD":"License or ID Document Issue Date",    "DBE":"Issue Timestamp",    "DBF":"Number of Duplicates",    "DBG":"Medical Indicator Codes",    "DBH":"Organ Donor",    "DBI":"Non-Resident Indicator",    "DBJ":"Unique Customer Identifier",    "DBK":"Social Security Number",    "DBL":"Date Of Birth",    "DBM":"Social Security Number",    "DBN":"Full Name",    "DBO":"Family Name",    "DBP":"Given Name",    "DBQ":"Middle Name or Initial",    "DBR":"Suffix",    "DBS":"Prefix",    "DCA":"Virginia Specific Class",    "DCB":"Virginia Specific Restrictions",    "DCD":"Virginia Specific Endorsements",    "DCE":"Physical Description Weight Range",    "DCF":"Document Discriminator",    "DCG":"Country territory of issuance",    "DCH":"Federal Commercial Vehicle Codes",    "DCI":"Place of birth",    "DCJ":"Audit information",    "DCK":"Inventory Control Number",    "DCL":"Race Ethnicity",    "DCM":"Standard vehicle classification",    "DCN":"Standard endorsement code",    "DCO":"Standard restriction code",    "DCP":"Jurisdiction specific vehicle classification description",    "DCQ":"Jurisdiction-specific",    "DCR":"Jurisdiction specific restriction code description",    "DCS":"Last Name",    "DCT":"Given Name",    "DCU":"Suffix",    "DDA":"Compliance Type",    "DDB":"Card Revision Date",    "DDC":"HazMat Endorsement Expiry Date",    "DDD":"Limited Duration Document Indicator",    "DDE":"Family Name Truncation",    "DDF":"First Names Truncation",    "DDG":"Middle Names Truncation",    "DDH":"Under 18 Until",    "DDI":"Under 19 Until",    "DDJ":"Under 21 Until",    "DDK":"Organ Donor Indicator",    "DDL":"Veteran Indicator",    "PAA":"Permit Classification Code",    "PAB":"Permit Expiration Date",    "PAC":"Permit Identifier",    "PAD":"Permit IssueDate",    "PAE":"Permit Restriction Code",    "PAF":"Permit Endorsement Code",    "ZVA":"Court Restriction Code"}
 
 partyList = './Lists/Test.xlsx'
-freshPartyList = True
+# freshPartyList = True
 outputList = 'logs.txt'
 outputFile = open(outputList, 'a')
-today = date.today()
+today = date.today()\
 
+LF = '\n'
+CRLF = '\r\n'
+CR = '\r'
 
 def parseID(value: str, prefixMap):
     perInfo = {}
+    alreadySeen = set()
+    value.replace(CRLF, LF).replace(CR, LF).replace(LF, CRLF)
     lines = value.split('\n')
     # k = 0
     for line in lines:
@@ -23,16 +46,14 @@ def parseID(value: str, prefixMap):
             perInfo[prefixMap[line[0:3]]]=line[3:]
         # print('{} - {}'.format(k,line))
         # k+=1
-    # print(perInfo)
     return perInfo
 
 def isOnList(fName, lName, partyListValues):
     onList = False
     blackballed=False
     name = (fName.lower() + ' ' +lName.lower())
-    print('Looking for: ' + name)
-    print(partyListValues.List.str.lower())
-    print(partyListValues.Blackball.str.lower())
+    # print(partyListValues.List.str.lower())
+    # print(partyListValues.Blackball.str.lower())
     if (name == partyListValues.List.str.lower()).any():
         onList = True
     if (name == partyListValues.Blackball.str.lower()).any():
@@ -53,17 +74,22 @@ def openInfoWindow(userInfo, partyListValues):
     fName = ''
     lName = ''
     if 'Last Name' in userInfo.keys():
-        lName = userInfo['Last Name']
+        lName = userInfo['Last Name'].split(',')[0].lower()
     if 'Given Name' in userInfo.keys():
-        fName = userInfo['Given Name']
+        fName = userInfo['Given Name'].split(',')[0].lower()
 
-    print('-----------',fName,lName)
+    print('Looking for:',fName,lName)
+    print('Birthday: '+birthdate.strftime('%m/%d/%Y'))
 
     onList, blackball = isOnList(fName, lName, partyListValues)
+    is21Color = 'orange'
+    is18Color = 'green'
+    notAllowedColor = 'red'
+    wristbandColor = is21Color if (age>=21) else (is18Color if (age>=18) else notAllowedColor)
 
-    infoLayout = [[sg.Text('NOT BLACKBALLED' if not blackball else 'BLACKBALLED', size=(30,5), background_color=('#06FF05' if not blackball else '#FF5733'))],
-                  [sg.Text('On List!' if onList else 'Not on List', size=(30,5), background_color=('#06FF05' if onList else '#FF5733'))],
-                  [sg.Text('Is over 21? {}'.format(is21),size=(30,5), background_color=('#06FF05' if (age>=21) else '#FF5733')  )]]
+    infoLayout = [[sg.Text('NOT BLACKBALLED' if not blackball else 'BLACKBALLED', size=(30,5), background_color=('#06FF05' if not blackball else '#FF5733'), text_color='black')],
+                  [sg.Text('On List!' if onList else 'Not on List', size=(30,5), background_color=('#06FF05' if onList else '#FF5733'), text_color='black')],
+                  [sg.Text('Is {}'.format(str(age)),size=(30,5), background_color=(wristbandColor), text_color='black')]]
     # infoWin = sg.Window('Information on {}'.format(userInfo['First Name']), infoLayout, modal=True)
    
     if not onList and not blackball:
@@ -87,36 +113,57 @@ sg.theme('DarkAmber')
 
 baseLayout = [
     [sg.Text('Scan an id into the box below:', key='firstLine')],
-    [sg.Text('ID Barcode:'), sg.InputText(key="Id-Values", enable_events=True), sg.Button('Submit', visible=False,  bind_return_key=True)],
+    [sg.Text('Scan ID to Continue')],
+    # [sg.Text('ID Barcode:'), sg.InputText(key="Id-Values", enable_events=True), sg.Button('Submit', visible=False,  bind_return_key=True)],
     [sg.Button('Set Party List'), sg.Button('Set Output of Adds')]
 ]
 
 window = sg.Window('Party-List-Scanner',baseLayout,finalize=True)
 Tk().withdraw()
 
+
+# Load party list
+partyListValues = pd.read_excel(partyList)
+partyListValues.drop('Unnamed: 1', axis=1)
+
+builtMessage = []
+openInfoWindowNext = False
+info = {}
+
+
+def buildCompleteMessage(data):
+    data = data[5:] # Remove USB header
+    builtMessage.extend(data[:-3]) #add all but USB footer
+    if data[-1] == 0:
+        #Message is complete
+        # print(builtMessage)
+        inputVal = ''.join(chr(i) for i in builtMessage)
+        # print(inputVal)
+        global info
+        info = parseID(inputVal, idPrefixes)
+        global openInfoWindowNext
+        openInfoWindowNext = True
+
+filter = hid.HidDeviceFilter(vendor_id = scannerVID, product_id = scannerPID)
+devices = filter.get_devices()
+scanner = devices[0]
+scanner.open()
+scanner.set_raw_data_handler(buildCompleteMessage)
+
 while True:
-    event, values = window.read()
+    timeout = 5
+    event, values = window.read(timeout=timeout)
     if event in [sg.WIN_CLOSED]:
         break 
-    elif event == 'Submit':
-        if freshPartyList:
-            # Load party list
-            partyListValues = pd.read_excel(partyList)
-            partyListValues.drop('Unnamed: 1', axis=1)
-            freshPartyList = False
-        else:
-            inputValue = values['Id-Values']
-            # Search for data on value
-            parsedInput = parseID(inputValue, idPrefixes)
-            openInfoWindow(parsedInput, partyListValues)
-            window['Id-Values'].update('')
-
+    if openInfoWindowNext:
+        openInfoWindow(info, partyListValues)
+        openInfoWindowNext = False
     elif event == 'Set Party List':
         inp = askopenfilename()
         if inp != '':
             partyList = inp
-            print(partyList)
-            freshPartyList = True        
+            partyListValues = pd.read_excel(partyList)
+            partyListValues.drop('Unnamed: 1', axis=1)    
 
     elif event == 'Set Output of Adds':
         inp = askopenfilename()
@@ -125,5 +172,6 @@ while True:
             outputList = inp
             outputFile = open(outputList,'a')
 
+scanner.close()
 outputFile.close()
 window.close()
