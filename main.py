@@ -137,9 +137,13 @@ while True:
     if event in [sg.WIN_CLOSED]:
         break 
     if openInfoWindowNext:
+        print(builtMessage)
         inputVal = ''.join(chr(i) for i in builtMessage)
-        # print(inputVal)
-        fn, ln, bd = idInfo.parseID(inputVal)
+        print('Input:', inputVal)
+        try:
+            fn, ln, bd = idInfo.parseID(inputVal)
+        except CardReadException:
+            print('Could not scan card correctly')
         openInfoWindow(fn, ln, bd, partyListValues)
         openInfoWindowNext = False
         builtMessage = []

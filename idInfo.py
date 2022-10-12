@@ -68,7 +68,7 @@ class idInformation():
         dateString = perInfo[versionSpecs[3]]
         birthdate = date(int(dateString[4:9]), int(dateString[0:2]), int(dateString[2:4]))
 
-        return perInfo[versionSpecs[1]].split(',')[0], perInfo[versionSpecs[2]], birthdate
+        return perInfo[versionSpecs[1]].split(',')[0].split(' ')[0], perInfo[versionSpecs[2]], birthdate
     
 
     def _getKeyMapFromVersion(self, infoLine: str):
