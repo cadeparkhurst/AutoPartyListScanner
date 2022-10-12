@@ -51,6 +51,8 @@ class idInformation():
     #
     def parseID(self, value: str):
         perInfo = {}
+        if not value[0] == '@':
+            raise CardReadException('Not valid ')
         lines = value.split('\n')
         versionSpecs = self._getKeyMapFromVersion(lines[1])
         prefixMap = versionSpecs[0]
@@ -75,7 +77,7 @@ class idInformation():
         amountToSkip = 13
         lengthOfVer = 2
         ver = ''.join(infoLine[amountToSkip:amountToSkip+lengthOfVer])
-        print(ver)
+        # print(ver)
         l = self.verToDict.get(ver)
         if l is None:
             return [self.aamva2020Prefixes, 'Customer First Name', 'Customer Family Name', 'Date of Birth']

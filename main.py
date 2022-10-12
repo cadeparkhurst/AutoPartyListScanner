@@ -52,11 +52,15 @@ def isOnList(fName, lName, partyListValues):
 #
 def openInfoWindow(firstName, lastName, birthdate, partyListValues): 
     #Calculate age
-    age = today.year - birthdate.year - ((today.month,today.day)<(birthdate.month, birthdate.day))
-    is21 = (age>=21)
+    if not birthdate is None:
+        age = today.year - birthdate.year - ((today.month,today.day)<(birthdate.month, birthdate.day))
+        is21 = (age>=21)
+    else:
+        is21 = False
+        age = 0
 
     print('Looking for:',firstName, lastName)
-    print('Birthday: '+birthdate.strftime('%m/%d/%Y'))
+    if not birthdate is None: print('Birthday: '+birthdate.strftime('%m/%d/%Y'))
 
     onList, blackball = isOnList(firstName, lastName, partyListValues)
     is21Color = 'orange'
@@ -66,7 +70,7 @@ def openInfoWindow(firstName, lastName, birthdate, partyListValues):
 
     infoLayout = [[sg.Text('NOT BLACKBALLED' if not blackball else 'BLACKBALLED', size=(30,5), background_color=('green' if not blackball else 'red'), text_color='black')],
                   [sg.Text('On List!' if onList else 'Not on List', size=(30,5), background_color=('green' if onList else 'red'), text_color='black')],
-                  [sg.Text('Is {}'.format(str(age)),size=(30,5), background_color=(wristbandColor), text_color='black')]]
+                  [sg.Text('Is {}'.format(str(age)) if not birthdate is None else 'Manually Check',size=(30,5), background_color=(wristbandColor), text_color='black')]]
     ### TODO: Could possibly add a check-in button, that logs when people checked in.
    
     if not onList and not blackball:
@@ -123,8 +127,9 @@ partyListValues = loadPartyList(partyList)
 # Build the main window and run the loop.
 sg.theme('DarkAmber')
 baseLayout = [
-    [sg.Text('Scan an id into the box below:', key='firstLine')],
+    # [sg.Text('Scan an id into the box below:', key='firstLine')],
     [sg.Text('Scan ID to Continue')],
+    [sg.Text('Or enter name here:'),sg.InputText(key='inputName'), sg.Button('Submit', bind_return_key=True)],
     # [sg.Text('ID Barcode:'), sg.InputText(key="Id-Values", enable_events=True), sg.Button('Submit', visible=False,  bind_return_key=True)],
     [sg.Button('Set Party List'), sg.Button('Set Output of Adds')]]
 
@@ -144,9 +149,20 @@ while True:
             fn, ln, bd = idInfo.parseID(inputVal)
         except CardReadException:
             print('Could not scan card correctly')
+            openInfoWindowNext = False
+            builtMessage = []
+            continue
         openInfoWindow(fn, ln, bd, partyListValues)
         openInfoWindowNext = False
         builtMessage = []
+    elif event == 'Submit':
+        #Split first and last name
+        inputName = values['inputName']
+        f = inputName.split(' ')[0]
+        l = inputName.split(' ')[1]
+        print('Looking for {},{}'.format(f,l))
+        openInfoWindow(f, l, None, partyListValues)
+        window['inputName']('')
     elif event == 'Set Party List':
         inp = askopenfilename()
         if inp != '':
