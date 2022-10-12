@@ -137,9 +137,9 @@ while True:
     if event in [sg.WIN_CLOSED]:
         break 
     if openInfoWindowNext:
-        print(builtMessage)
+        # print(builtMessage)
         inputVal = ''.join(chr(i) for i in builtMessage)
-        print('Input:', inputVal)
+        # print('Input:', inputVal)
         try:
             fn, ln, bd = idInfo.parseID(inputVal)
         except CardReadException:

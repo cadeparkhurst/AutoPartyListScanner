@@ -78,7 +78,7 @@ class idInformation():
         print(ver)
         l = self.verToDict.get(ver)
         if l is None:
-            return [aamva2020Prefixes, 'Customer First Name', 'Customer Family Name', 'Date of Birth']
+            return [self.aamva2020Prefixes, 'Customer First Name', 'Customer Family Name', 'Date of Birth']
             # raise CardReadException('Unsupported AAMVA Version {}'.format(ver))
         else:
             return l
