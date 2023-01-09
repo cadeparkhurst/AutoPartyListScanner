@@ -175,6 +175,9 @@ window = sg.Window('Party-List-Scanner',baseLayout,finalize=True)
 window.bind("<Control-j>","ENTER")
 window.bind("<Control-J>","ENTER")
 
+# Old Scanner Presses Down stead of Enter
+window.bind("<Down>","ENTER")
+
 
 window.bind("<Return>","Pressed_Enter")
 
