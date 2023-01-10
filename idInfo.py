@@ -1,7 +1,12 @@
 from datetime import date
 
 class CardReadException(Exception):
-    pass
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+    
 
 class idInformation():
 
@@ -51,6 +56,8 @@ class idInformation():
     #
     def parseID(self, value: str):
         perInfo = {}
+        if len(value)<1:
+            raise CardReadException('Not valid, too short')
         if not value[0] == '@':
             raise CardReadException('Not valid ')
         lines = value.split('\n')

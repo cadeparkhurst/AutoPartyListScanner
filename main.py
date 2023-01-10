@@ -1,4 +1,4 @@
-# Must install PySimpleGUI, tkinter, pywinusb, fuzzywuzzy, python
+# Must install PySimpleGUI, tkinter, fuzzywuzzy, python
 #  pyinstaller (for exe creation)
 
 import PySimpleGUI as sg
@@ -214,12 +214,10 @@ while True:
             runOpenInfo=True
             inputBarcode = values['Id-Values']
             # window.write_event_value('Submit_Code','')
-            window['Id-Values']('')
             enterCount=0
     elif event == 'Submit_Code':
         inputBarcode = values['Id-Values']
         runOpenInfo=True
-        window['Id-Values']('')
     elif event == 'Submit':
         #Split first and last name
         inputName = values['inputName']
@@ -240,10 +238,18 @@ while True:
         try:
             fn, ln, bd = idInfo.parseID(inputBarcode)
             openInfoWindow(fn,ln,bd,partyListValues)
-        except CardReadException:
+        except CardReadException as c:
             print('Could not scan card properly')
             print('Please manually check ID')
+            debugFile = open('./Logs/debug.txt','a+')
+            debugFile.write('----- Failed ('+c.__str__()+') -----\n')
+            debugFile.write('----- {} -----\n'.format(datetime.now()))
+            debugFile.write(inputBarcode)
+            debugFile.write('\n')
+            debugFile.write('--------------------------\n')
+            debugFile.close()
         runOpenInfo=False
+        window['Id-Values']('')
 
 # scanner.close()
 addFile.close()
