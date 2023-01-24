@@ -61,18 +61,18 @@ class idInformation():
         if not value[0] == '@':
             raise CardReadException('Not valid ')
         lines = value.split('\n')
-        versionSpecs = self._getKeyMapFromVersion(lines[1])
+        versionSpecs = self._getKeyMapFromVersion(lines[2])
         prefixMap = versionSpecs[0]
         for line in lines:
             if line[0:3] in prefixMap.keys():
-                perInfo[prefixMap[line[0:3]]]=line[3:]
+                perInfo[prefixMap[line[0:3]]]=line[3:].split(',')[0]
         
         if not versionSpecs[1] in perInfo.keys():
-            raise CardReadException("Couldn't find first name.")
+            raise CardReadException("Couldn't find first name. (spec:{})".format(versionSpecs))
         if not versionSpecs[2] in perInfo.keys():
-            raise CardReadException("Couldn't find last name.")
+            raise CardReadException("Couldn't find last name. (spec:{})".format(versionSpecs))
         if not versionSpecs[3] in perInfo.keys():
-            raise CardReadException("Couldn't find birthday.")
+            raise CardReadException("Couldn't find birthday. (spec:{})".format(versionSpecs))
 
         dateString = perInfo[versionSpecs[3]]
         birthdate = date(int(dateString[4:9]), int(dateString[0:2]), int(dateString[2:4]))
@@ -81,10 +81,12 @@ class idInformation():
     
 
     def _getKeyMapFromVersion(self, infoLine: str):
-        amountToSkip = 13
+        amountToSkip = 11
         lengthOfVer = 2
         ver = ''.join(infoLine[amountToSkip:amountToSkip+lengthOfVer])
-        # print(ver)
+        # print('Line: ',infoLine)
+        # print('Version: ',ver)
+        # print('VersionRaw: ',infoLine[amountToSkip:amountToSkip+lengthOfVer])
         l = self.verToDict.get(ver)
         if l is None:
             return [self.aamva2020Prefixes, 'Customer First Name', 'Customer Family Name', 'Date of Birth']

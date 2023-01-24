@@ -8,7 +8,7 @@ from tkinter.filedialog import askopenfilename
 import pandas as pd
 from time import sleep
 
-from fuzzywuzzy import fuzz
+# from fuzzywuzzy import fuzz
 
 # # Used for USB POS 
 # from threading import current_thread
@@ -46,7 +46,7 @@ BLACKBALL = "Blackball"
 
 def loadPartyList(path):
     values = pd.read_excel(path)
-    print(values.keys)
+    # print(values.keys)
     values[LIST_NAMES] = values[LIST_NAMES].str.lower()
     # values.drop('Unnamed: 1', axis=1) # unused row between List/Blackball
     return values
@@ -70,8 +70,8 @@ def isOnList(fName, lName, partyListValues):
     if (name == partyListValues[BLACKBALL].str.lower()).any():
         blackballed = True
 
-    if not (onList or blackballed):
-        ## Fuzzy Searchh
+    if not onList and not blackballed:
+        ## Fuzzy Search
         print("Make fuzzy search work later")
         # print(partyListValues[LIST_NAMES].map(lambda x:fuzz.ratio(x,name)))
         # if (partyListValues[LIST_NAMES].map(lambda x:fuzz.ratio(x,name)>80)).any():
@@ -216,8 +216,10 @@ while True:
             # window.write_event_value('Submit_Code','')
             enterCount=0
     elif event == 'Submit_Code':
+        # print(values['Id-Values'])
         inputBarcode = values['Id-Values']
         runOpenInfo=True
+        enterCount=0
     elif event == 'Submit':
         #Split first and last name
         inputName = values['inputName']
